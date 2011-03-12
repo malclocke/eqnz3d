@@ -1,0 +1,39 @@
+<html>
+  <head>
+
+    <script id="shader-vs" type="x-shader/x-vertex"> 
+      attribute vec3 aPos; // Normals = Pos
+      uniform mat4 mvMatrix;
+      uniform mat4 prMatrix;
+      uniform vec3 color;
+      uniform float scale;
+      varying vec3 col;
+      const vec4 dirDif = vec4(0., 0., 1., 0.);
+      const vec4 dirHalf = vec4(-.4034, .259, .8776, 0.);
+    void main(void) {
+       gl_Position = prMatrix * mvMatrix * vec4(scale * aPos, 1.);
+       vec4 rotNorm = mvMatrix * vec4(aPos, .0);
+       float i = max( 0., dot(rotNorm, dirDif) );
+       col = i * color;
+       i = pow( max( 0., dot(rotNorm, dirHalf) ), 30.);
+       col += vec3(i, i, i);
+    }
+    </script> 
+     
+    <script id="shader-fs" type="x-shader/x-fragment"> 
+    #ifdef GL_ES
+    precision highp float;
+    #endif
+      varying vec3 col;
+    void main(void) {
+       gl_FragColor = vec4(col, 1.);
+    }
+    </script> 
+    <script type="text/javascript" src="CanvasMatrix.js"></script>
+    <script type="text/javascript" src="earthquakes.js"></script>
+    <script type="text/javascript" src="earthquake-gl.js"></script>
+  </head>
+  <body onload="webGLStart();">
+    <canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
+  </body>
+</html>
