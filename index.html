@@ -21,16 +21,34 @@
     </script> 
      
     <script id="shader-fs" type="x-shader/x-fragment"> 
-    #ifdef GL_ES
-    precision highp float;
-    #endif
-      varying vec3 col;
-    void main(void) {
-       gl_FragColor = vec4(col, 1.);
-    }
+      #ifdef GL_ES
+      precision highp float;
+      #endif
+        varying vec3 col;
+      void main(void) {
+         gl_FragColor = vec4(col, 1.);
+      }
     </script> 
+    <script id="line-vs" type="x-shader/x-vertex"> 
+      attribute vec3 aPos;
+      uniform mat4 mvMatrix;
+      uniform mat4 prMatrix;
+      void main(void) {
+         gl_Position = prMatrix * mvMatrix * vec4( aPos, 1.);
+      }
+    </script> 
+     
+    <script id="line-fs" type="x-shader/x-fragment"> 
+      #ifdef GL_ES
+      precision highp float;
+      #endif
+      void main(void) {
+         gl_FragColor = vec4( 1.);
+      }
+    </script>
     <script type="text/javascript" src="CanvasMatrix.js"></script>
     <script type="text/javascript" src="earthquakes.js"></script>
+    <script type="text/javascript" src="map_nodes.js"></script>
     <script type="text/javascript" src="earthquake-gl.js"></script>
   </head>
   <body onload="webGLStart();">

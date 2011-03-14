@@ -1,6 +1,11 @@
 var gl;
 
-// Center position of map, and center of rotation
+//var map_nodes = [
+//  {lat: 43.53098, lon: 172.63674},
+//  {lat: 43.53, lon: 172.63}
+//];
+
+// Center position of map, and center of rotation (Cathedral Sq)
 var center_lat = 43.53098;
 var center_lon = 172.63674;
 
@@ -55,7 +60,34 @@ function webGLStart() {
    var prog  = gl.createProgram();
    gl.attachShader(prog, getShader( gl, "shader-vs" ));
    gl.attachShader(prog, getShader( gl, "shader-fs" ));
+   var posLoc = 1;
+   gl.bindAttribLocation(line_prog, posLoc, "aPos");
    gl.linkProgram(prog);
+
+   var line_prog = gl.createProgram();
+   gl.attachShader(line_prog, getShader( gl, "line-vs" ));
+   gl.attachShader(line_prog, getShader( gl, "line-fs" ));
+   var lineLoc = 1;
+   gl.bindAttribLocation(line_prog, lineLoc, "aPos");
+   gl.linkProgram(line_prog);
+
+   var lines = [];
+   /*
+   for (var i = -10; i <= 10; i++ )
+      for (var j = -10; j <= 10; j++ ){
+         lines.push( i, j, 0 );
+      }
+   */
+   for (var i = 0; i < map_nodes.length; i++) {
+     var node = map_nodes[i];
+     x = kmFromLon(node.lon);
+     y = kmFromLat(node.lat);
+     lines.push(x, y, 0);
+   }
+   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array( lines ),gl.STATIC_DRAW);
+   gl.vertexAttribPointer(lineLoc, 3, gl.FLOAT, false, 0, 0);
+
    gl.useProgram(prog);
  
    var vertices = [], ind = [];
@@ -85,7 +117,7 @@ function webGLStart() {
    gl.bindBuffer(gl.ARRAY_BUFFER, posBuffer);
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
    gl.vertexAttribPointer(posLocation, 3, gl.FLOAT, false, 0, 0);
- 
+
    var indexBuffer = gl.createBuffer();
    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(ind),
@@ -93,41 +125,62 @@ function webGLStart() {
  
    var prMatrix = new CanvasMatrix4();
    //prMatrix.perspective(45, 1, .1, 200);
-   prMatrix.perspective(45, 1, .1, 200);
-   gl.uniformMatrix4fv( gl.getUniformLocation(prog,"prMatrix"),
-      false, new Float32Array(prMatrix.getAsArray()) );
    var mvMatrix = new CanvasMatrix4();
    var rotMat = new CanvasMatrix4();
    rotMat.makeIdentity();
    var mvMatLoc = gl.getUniformLocation(prog,"mvMatrix");
    var colorLoc = gl.getUniformLocation(prog,"color");
    var scaleLoc = gl.getUniformLocation(prog,"scale");
+   var mvMatLine = gl.getUniformLocation(line_prog,"mvMatrix");
+
+   gl.useProgram(prog);
+   prMatrix.perspective(45, 1, .1, 200);
+   gl.uniformMatrix4fv( gl.getUniformLocation(prog,"prMatrix"),
+      false, new Float32Array(prMatrix.getAsArray()) );
+
+   gl.useProgram(line_prog);
+   gl.uniformMatrix4fv( gl.getUniformLocation(line_prog,"prMatrix"),
+     false, new Float32Array(prMatrix.getAsArray()) );
  
    gl.enable(gl.DEPTH_TEST);
    gl.depthFunc(gl.LEQUAL);
    gl.clearDepth(1.0);
-   gl.clearColor(0, 0, .8, 1);
+   gl.clearColor(0, 0, 0, 1);
    var xOffs = yOffs = 0,  drag  = 0;
    var xRot = yRot = 0;
    //var transl = -10.5;
-   var transl = -50;
+   var transl = -100;
+   //rotMat.rotate(180, 1, 0, 0);
+   rotMat.rotate(180, 0, 1, 0);
    drawScene();
  
   function drawScene(){
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     rotMat.rotate(xRot/3, 1,0,0);  rotMat.rotate(yRot/3, 0,1,0);
 
-    drawAftershock(center_lon, center_lat, 0.0, 7.0);
-    drawAftershock(center_lon - .1, center_lat - .1, 0.0, 7.0);
-    drawAftershock(center_lon + .1, center_lat - .1, 0.0, 7.0);
-    drawAftershock(center_lon - .1, center_lat + .1, 0.0, 7.0);
-    drawAftershock(center_lon + .1, center_lat + .1, 0.0, 7.0);
+    //drawMap();
+
     for (var i = 0; i < earthquakes.length; i++) {
       aftershock = earthquakes[i];
       drawAftershock(aftershock.lon, aftershock.lat, aftershock.z, aftershock.mag);
     }
 
-    gl.flush ();
+    gl.useProgram(line_prog);
+    mvMatrix.load(rotMat);
+    mvMatrix.translate(0, 0, transl);
+    gl.uniformMatrix4fv( mvMatLine, false, new Float32Array(mvMatrix.getAsArray()) );
+    gl.enableVertexAttribArray( lineLoc );
+    gl.drawArrays(gl.LINES, 0, map_nodes.length);
+
+    gl.flush();
+    gl.useProgram(prog);
+  }
+  function drawMap() {
+    drawAftershock(center_lon, center_lat, 0.0, 7.0);
+    drawAftershock(center_lon - .1, center_lat - .1, 0.0, 7.0);
+    drawAftershock(center_lon + .1, center_lat - .1, 0.0, 7.0);
+    drawAftershock(center_lon - .1, center_lat + .1, 0.0, 7.0);
+    drawAftershock(center_lon + .1, center_lat + .1, 0.0, 7.0);
   }
   function drawAftershock(lon, lat, depth, magnitude) {
     if (magnitude >= 6.0) {
