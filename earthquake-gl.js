@@ -14,6 +14,8 @@ var lat_to_km = 111;
 // Approx measure of 1 degree of longitude at map centre
 var lon_to_km = 81;
 
+var coast_node_count = 0;
+
 /**
  * Returns the number of KM's from the center of the map for
  * the given latitude or longitude.
@@ -71,18 +73,22 @@ function webGLStart() {
    gl.bindAttribLocation(line_prog, lineLoc, "aPos");
    gl.linkProgram(line_prog);
 
-   var lines = [];
    /*
    for (var i = -10; i <= 10; i++ )
       for (var j = -10; j <= 10; j++ ){
          lines.push( i, j, 0 );
       }
    */
+   var lines = [];
    for (var i = 0; i < map_nodes.length; i++) {
-     var node = map_nodes[i];
-     x = kmFromLon(node.lon);
-     y = kmFromLat(node.lat);
-     lines.push(x, y, 0);
+     var way = map_nodes[i];
+     for (var j = 0; j < way.length; j++) {
+       var node = way[j];
+       x = kmFromLon(node.lon);
+       y = kmFromLat(node.lat);
+       lines.push(x, y, 0);
+       coast_node_count += 1;
+     }
    }
    gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array( lines ),gl.STATIC_DRAW);
@@ -170,7 +176,7 @@ function webGLStart() {
     mvMatrix.translate(0, 0, transl);
     gl.uniformMatrix4fv( mvMatLine, false, new Float32Array(mvMatrix.getAsArray()) );
     gl.enableVertexAttribArray( lineLoc );
-    gl.drawArrays(gl.LINES, 0, map_nodes.length);
+    gl.drawArrays(gl.LINES, 0, coast_node_count);
 
     gl.flush();
     gl.useProgram(prog);
