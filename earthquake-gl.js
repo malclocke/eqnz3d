@@ -161,6 +161,7 @@ function webGLStart() {
   drawScene();
  
   function drawScene(){
+    gl.useProgram(prog);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     rotMat.rotate(xRot/3, 1,0,0);  rotMat.rotate(yRot/3, 0,1,0);
 
@@ -179,7 +180,6 @@ function webGLStart() {
     gl.drawArrays(gl.LINES, 0, coast_node_count);
 
     gl.flush();
-    gl.useProgram(prog);
   }
   function drawMap() {
     drawAftershock(center_lon, center_lat, 0.0, 7.0);
