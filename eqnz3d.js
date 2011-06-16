@@ -1,7 +1,6 @@
 
 var container, stats;
 var camera, scene, renderer, group, particle;
-var enable_stats = false;
 
 var map_material = new THREE.MeshBasicMaterial({
   map: THREE.ImageUtils.loadTexture('map.png'), opacity: 0.2
@@ -88,12 +87,11 @@ function init() {
   renderer.setSize( canvasWidth, canvasHeight );
   container.appendChild( renderer.domElement );
 
-  if (enable_stats) {
-    stats = new Stats();
-    stats.domElement.style.position = 'absolute';
-    stats.domElement.style.top = '0px';
-    container.appendChild( stats.domElement );
-  }
+  stats = new Stats();
+  stats.domElement.style.position = 'absolute';
+  stats.domElement.style.top = '0px';
+  stats.domElement.style.display = 'none';
+  container.appendChild( stats.domElement );
 }
 
 function animate() {
@@ -102,9 +100,7 @@ function animate() {
 
   render();
 
-  if (stats) {
-    stats.update();
-  }
+  stats.update();
 }
 
 function render() {
@@ -187,6 +183,10 @@ $(function() {
 
   $('#reset_camera').click(function() {
     resetCamera();
+  });
+
+  $('#toggle_stats').click(function() {
+    $(stats.domElement).toggle();
   });
 });
 
