@@ -62,39 +62,10 @@ function webGLStart() {
   var prog  = gl.createProgram();
   gl.attachShader(prog, getShader( gl, "shader-vs" ));
   gl.attachShader(prog, getShader( gl, "shader-fs" ));
-  var posLoc = 1;
-  gl.bindAttribLocation(line_prog, posLoc, "aPos");
+  var posLoc = gl.getAttribLocation(prog, "aPos");
+  console.debug(posLoc);
+  gl.bindAttribLocation(prog, posLoc, "aPos");
   gl.linkProgram(prog);
-
-  var line_prog = gl.createProgram();
-  gl.attachShader(line_prog, getShader( gl, "line-vs" ));
-  gl.attachShader(line_prog, getShader( gl, "line-fs" ));
-  var lineLoc = 1;
-  gl.bindAttribLocation(line_prog, lineLoc, "aPos");
-  gl.linkProgram(line_prog);
-
-  /*
-     for (var i = -10; i <= 10; i++ )
-     for (var j = -10; j <= 10; j++ ){
-     lines.push( i, j, 0 );
-     }
-     */
-  var lines = [];
-  for (var i = 0; i < map_nodes.length; i++) {
-    var way = map_nodes[i];
-    for (var j = 0; j < way.length; j++) {
-      var node = way[j];
-      x = kmFromLon(node.lon);
-      y = kmFromLat(node.lat);
-      lines.push(x, y, 0);
-      coast_node_count += 1;
-    }
-  }
-  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array( lines ),gl.STATIC_DRAW);
-  gl.vertexAttribPointer(lineLoc, 3, gl.FLOAT, false, 0, 0);
-
-  gl.useProgram(prog);
 
   var vertices = [], ind = [];
   var nPhi = 10, nTheta = 5,
@@ -129,8 +100,25 @@ function webGLStart() {
   gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(ind),
       gl.STATIC_DRAW);
 
+
+  var line_prog = gl.createProgram();
+  gl.attachShader(line_prog, getShader( gl, "map-vs" ));
+  gl.attachShader(line_prog, getShader( gl, "map-fs" ));
+  var lineLoc = gl.getAttribLocation(line_prog, "aPos");
+  gl.bindAttribLocation(line_prog, lineLoc, "aPos");
+  gl.linkProgram(line_prog);
+
+  var lines = [
+    -1, -1, 0,
+     1, -1, 0,
+    -1,  1, 0,
+     1,  1, 0
+  ];
+
+  gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array( lines ),gl.STATIC_DRAW);
+
   var prMatrix = new CanvasMatrix4();
-  //prMatrix.perspective(45, 1, .1, 200);
   var mvMatrix = new CanvasMatrix4();
   var rotMat = new CanvasMatrix4();
   rotMat.makeIdentity();
@@ -139,8 +127,8 @@ function webGLStart() {
   var scaleLoc = gl.getUniformLocation(prog,"scale");
   var mvMatLine = gl.getUniformLocation(line_prog,"mvMatrix");
 
-  gl.useProgram(prog);
   prMatrix.perspective(45, 1, .1, 200);
+  gl.useProgram(prog);
   gl.uniformMatrix4fv( gl.getUniformLocation(prog,"prMatrix"),
       false, new Float32Array(prMatrix.getAsArray()) );
 
@@ -154,30 +142,27 @@ function webGLStart() {
   gl.clearColor(0, 0, 0, 1);
   var xOffs = yOffs = 0,  drag  = 0;
   var xRot = yRot = 0;
-  //var transl = -10.5;
   var transl = -100;
-  //rotMat.rotate(180, 1, 0, 0);
   rotMat.rotate(180, 0, 1, 0);
   drawScene();
  
   function drawScene(){
-    gl.useProgram(prog);
+    gl.useProgram(line_prog);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-    rotMat.rotate(xRot/3, 1,0,0);  rotMat.rotate(yRot/3, 0,1,0);
+    mvMatrix.load(rotMat);
+    mvMatrix.multRight( rotMat );
+    mvMatrix.translate(0, 0, transl);
+    gl.uniformMatrix4fv( mvMatLine, false, new Float32Array(mvMatrix.getAsArray()) );
+    gl.enableVertexAttribArray(gl.getAttribLocation(line_prog, "aPos"));
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 
-    //drawMap();
+    gl.useProgram(prog);
+    rotMat.rotate(xRot/3, 1,0,0);  rotMat.rotate(yRot/3, 0,1,0);
 
     for (var i = 0; i < earthquakes.length; i++) {
       aftershock = earthquakes[i];
       drawAftershock(aftershock.lon, aftershock.lat, aftershock.z, aftershock.mag);
     }
-
-    gl.useProgram(line_prog);
-    mvMatrix.load(rotMat);
-    mvMatrix.translate(0, 0, transl);
-    gl.uniformMatrix4fv( mvMatLine, false, new Float32Array(mvMatrix.getAsArray()) );
-    gl.enableVertexAttribArray( lineLoc );
-    gl.drawArrays(gl.LINES, 0, coast_node_count);
 
     gl.flush();
   }
