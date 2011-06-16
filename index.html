@@ -1,62 +1,87 @@
-<html>
-  <head>
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<title>three.js canvas - particles - random</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width; initial-scale=1.0; maximum-scale=1.0; user-scalable=0;"/>
+		<style type="text/css">
+			body {
+				background-color: #000000;
+				margin: 0px;
+				overflow: hidden;
+			}
 
-    <script id="shader-vs" type="x-shader/x-vertex"> 
-      attribute vec3 aPos; // Normals = Pos
-      uniform mat4 mvMatrix;
-      uniform mat4 prMatrix;
-      uniform vec3 color;
-      uniform float scale;
-      varying vec3 col;
-      const vec4 dirDif = vec4(0., 0., 1., 0.);
-      const vec4 dirHalf = vec4(-.4034, .259, .8776, 0.);
-    void main(void) {
-       gl_Position = prMatrix * mvMatrix * vec4(scale * aPos, 1.);
-       vec4 rotNorm = mvMatrix * vec4(aPos, .0);
-       float i = max( 0., dot(rotNorm, dirDif) );
-       col = i * color;
-       i = pow( max( 0., dot(rotNorm, dirHalf) ), 30.);
-       col += vec3(i, i, i);
-    }
-    </script> 
-     
-    <script id="shader-fs" type="x-shader/x-fragment"> 
-      #ifdef GL_ES
-      precision highp float;
-      #endif
-        varying vec3 col;
-      void main(void) {
-         gl_FragColor = vec4(col, 1.);
+			a {
+				color:#0078ff;
+			}
+
+      #controls {
+        color: white;
+        padding: 0.2em;
+        text-align: center;
       }
-    </script> 
 
-    <script id="map-fs" type="x-shader/x-fragment">
-      #ifdef GL_ES
-      precision highp float;
-      #endif
-
-      void main(void) {
-        gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+      h1 {
+        font-size: 1.5em;
       }
-    </script>
 
-    <script id="map-vs" type="x-shader/x-vertex">
-      attribute vec3 aPos;
-
-      uniform mat4 mvMatrix;
-      uniform mat4 prMatrix;
-
-      void main(void) {
-        gl_Position = prMatrix * mvMatrix * vec4(aPos, 1.0);
+      #controls > div.control, h1 {
+        display: inline-block;
+        margin: 0.2em 0.1em;
+        padding: 0.3em 1em;
+        background-color: #222;
+        text-align: center;
+        vertical-align: middle;
+        border: 1px solid #444;
+        -moz-border-radius: 3px;
+        -webkit-border-radius: 3px;
+        border-radius: 3px;
       }
-    </script>
 
-    <script type="text/javascript" src="CanvasMatrix.js"></script>
+      div.control_help strong {
+        color: #a00;
+      }
+
+      div.credits {
+        font-size: small;
+      }
+
+      a, a:visited {
+        color: #a00;
+      }
+
+		</style>
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/themes/black-tie/jquery-ui.css">
+	</head>
+	<body>
+
+    <div id="controls">
+      <h1>eqnz3d</h1>
+      <div class="control">
+        Map opacity: <strong id="opacity_value">50</strong> <div id="opacity"></div>
+      </div>
+      <div class="control">
+        Magnitude range: <strong id="mag_min">3</strong> &rarr;<strong id="mag_max">7</strong> <div id="magnitude"></div>
+      </div>
+      <div class="control">
+        <input id="reset_camera" type="button" value="Reset view">
+      </div>
+      <div class="control_help">
+        <strong>A/LFT BTN</strong> &raquo; <em>Rotate</em>,
+        <strong>S/MID BTN</strong> &raquo; <em>Zoom</em>,
+        <strong>D/RGT BTN</strong> &raquo; <em>Pan</em>
+      </div>
+      <div class="credits">
+        Credits: Mashup by <a href="http://wholemeal.co.nz/">Malcolm Locke</a>, Quake Data <a href="http://geonet.org.nz/">GeoNet</a>, Map <a href="http://openstreetmap.org/">&copy; OpenStreetMap contributers</a> <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, 3D library <a href="https://github.com/mrdoob/three.js">three.js</a>
+      </div>
+    </div>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="js/Three.js"></script>
+		<script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
+		<script type="text/javascript" src="js/Stats.js"></script>
     <script type="text/javascript" src="earthquakes.js"></script>
-    <script type="text/javascript" src="map_nodes.js"></script>
-    <script type="text/javascript" src="earthquake-gl.js"></script>
-  </head>
-  <body onload="webGLStart();">
-    <canvas id="canvas" style="border: none;" width="500" height="500"></canvas>
-  </body>
+    <script type="text/javascript" src="eqnz3d.js"></script>
+	</body>
 </html>
