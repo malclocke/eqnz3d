@@ -122,7 +122,7 @@ function init() {
     particle.position.x = kmFromLon(aftershock.lon);
     particle.position.y = kmFromLat(aftershock.lat);
     particle.position.z = aftershock.z * -1;
-    particle.scale.x = particle.scale.y = (aftershock.mag / 100) * aftershock.mag;
+    particle.scale.x = particle.scale.y = (aftershock.mag / 50) * aftershock.mag;
     particle.aftershock = aftershock;
     group.addChild( particle );
   }
