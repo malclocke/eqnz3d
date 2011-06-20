@@ -1,9 +1,10 @@
 
 var container, stats;
 var camera, scene, renderer, group, particle;
+var map_opacity = 20;
 
 var map_material = new THREE.MeshBasicMaterial({
-  map: THREE.ImageUtils.loadTexture('map.png'), opacity: 0.2
+  map: THREE.ImageUtils.loadTexture('map.png'), opacity: map_opacity / 100
 });
 
 // Center position of map, and center of rotation (Cathedral Sq)
@@ -14,6 +15,16 @@ var center_lon = 172.63674;
 var lat_to_km = 111;
 // Approx measure of 1 degree of longitude at map centre
 var lon_to_km = 81;
+
+var min_date = new Date(2011,1,21);
+var max_date = new Date(Date.now());
+var filter_dates = {
+  min: min_date,
+  max: max_date
+};
+
+var mag_min = 3;
+var mag_max = 6;
 
 init();
 animate();
@@ -38,13 +49,15 @@ function init() {
     panSpeed: 5.0,
 
     noZoom: false,
-    noPan: false,
+    // TODO Removed for now, not working correctly
+    noPan: true,
 
     staticMoving: true,
     dynamicDampingFactor: 0.3,
 
-    keys: [ 65, 83, 68 ]
+    keys: [ 65, 83, 68 ],
 
+    domElement: container
   });
   resetCamera();
 
@@ -70,6 +83,15 @@ function init() {
 
   for (var i = 0; i < earthquakes.length; i++) {
     var aftershock = earthquakes[i];
+    aftershock.timestamp = new Date(aftershock.time);
+
+    if (aftershock.timestamp < min_date) {
+      min_date = aftershock.timestamp;
+    }
+
+    if (aftershock.timestamp > max_date) {
+      max_date = aftershock.timestamp;
+    }
 
     var color = colorForMag(aftershock.mag);
     particle = new THREE.Particle( new THREE.ParticleCanvasMaterial( {
@@ -78,7 +100,7 @@ function init() {
     particle.position.x = kmFromLon(aftershock.lon);
     particle.position.y = kmFromLat(aftershock.lat);
     particle.position.z = aftershock.z * -1;
-    particle.scale.x = particle.scale.y = aftershock.mag / 20;
+    particle.scale.x = particle.scale.y = (aftershock.mag / 100) * aftershock.mag;
     particle.aftershock = aftershock;
     group.addChild( particle );
   }
@@ -139,13 +161,36 @@ function colorForMag(magnitude) {
   return(col);
 }
 
-function limitMagRange(min, max) {
+function hexColorForMag(magnitude) {
+  if (magnitude >= 6.0) {
+    // Red
+    col = "#FF0000";
+  } else if (magnitude >= 5) {
+    // Yellow
+    col = "#FFFF00";
+  } else if (magnitude >= 4) {
+    // Green
+    col = "#00FF00";
+  } else {
+    // Blue
+    col = "#0000FF";
+  }
+  return(col);
+}
+
+function filterAftershocks() {
   THREE.SceneUtils.traverseHierarchy(group, function (particle) {
     if (typeof particle.aftershock != 'undefined') {
-      if (particle.aftershock.mag >= min && particle.aftershock.mag < (max + 1)) {
+      if (particle.aftershock.mag >= mag_min && particle.aftershock.mag < (mag_max + 1)) {
         particle.visible = true;
       } else {
         particle.visible = false;
+        return;
+      }
+
+      if (particle.aftershock.timestamp < filter_dates.min || particle.aftershock.timestamp > filter_dates.max) {
+        particle.visible = false;
+        return;
       }
     }
   });
@@ -158,9 +203,20 @@ function resetCamera() {
   camera.up.y = 1;
 }
 
+(function( $ ){
+
+  $.fn.setMagnitude = function(magnitude) {
+    this.html(magnitude);
+    this.css('color', hexColorForMag(magnitude));
+    return this;
+  };
+
+})(jQuery);
+
 $(function() {
+
   $('#opacity').slider({
-    value: 50,
+    value: 20,
     min: 0,
     max: 100,
     slide: function(event, ui) {
@@ -168,18 +224,24 @@ $(function() {
       $('#opacity_value').html(ui.value);
     }
   });
+  $('#opacity_value').html(map_opacity);
 
   $('#magnitude').slider({
     range: true,
-    min: 3,
-    max: 6,
-    values: [3,6],
+    min: mag_min,
+    max: mag_max,
+    values: [mag_min,mag_max],
     slide: function(event, ui) {
-      $('#mag_min').html(ui.values[0]);
-      $('#mag_max').html(ui.values[1]);
-      limitMagRange(ui.values[0], ui.values[1]);
+      $('#mag_min').setMagnitude(ui.values[0]);
+      $('#mag_max').setMagnitude(ui.values[1]);
+      mag_min = ui.values[0];
+      mag_max = ui.values[1];
+      filterAftershocks();
     }
   });
+
+  $('#mag_min').setMagnitude(mag_min);
+  $('#mag_max').setMagnitude(mag_max);
 
   $('#reset_camera').click(function() {
     resetCamera();
@@ -187,6 +249,15 @@ $(function() {
 
   $('#toggle_stats').click(function() {
     $(stats.domElement).toggle();
+  });
+
+  $('#date_control').dateRangeSlider({
+    defaultValues: {min: min_date, max: new Date(2011,1,23)},
+    bounds: {min: min_date, max: max_date},
+  }).bind("valuesChanging", function(event, ui){
+    filter_dates.max = ui.values.max;
+    filter_dates.min = ui.values.min;
+    filterAftershocks();
   });
 });
 

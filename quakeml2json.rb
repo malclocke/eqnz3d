@@ -13,6 +13,7 @@ events = []
     :lon  => (event/'longitude value').text.to_f,
     :z    => (event/'depth value').text.to_f,
     :mag  => (event/'mag value').text.to_f,
+    :time => (event/'time value').text
   }
 end
 

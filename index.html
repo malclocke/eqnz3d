@@ -38,6 +38,10 @@
         border-radius: 3px;
       }
 
+      #date_control {
+        margin-top: 30px;
+      }
+
       div.control_help strong {
         color: #a00;
       }
@@ -53,16 +57,17 @@
 		</style>
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/themes/base/jquery-ui.css">
     <link rel="stylesheet" href="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/themes/black-tie/jquery-ui.css">
+    <link rel="stylesheet" href="date_range_slider.css">
 	</head>
 	<body>
 
     <div id="controls">
       <h1>eqnz3d</h1>
       <div class="control">
-        Map opacity: <strong id="opacity_value">50</strong> <div id="opacity"></div>
+        Map opacity: <strong id="opacity_value"></strong> <div id="opacity"></div>
       </div>
       <div class="control">
-        Magnitude range: <strong id="mag_min">3</strong> &rarr;<strong id="mag_max">6</strong> <div id="magnitude"></div>
+        Magnitude range: <strong id="mag_min"></strong> &rarr;<strong id="mag_max"></strong> <div id="magnitude"></div>
       </div>
       <div class="control">
         <input id="toggle_stats" type="checkbox"><label for="toggle_stats">Statistics</label>
@@ -70,10 +75,11 @@
       <div class="control">
         <input id="reset_camera" type="button" value="Reset view">
       </div>
+      <div id="date_control"></div>
       <div class="control_help">
         <strong>A/LFT BTN</strong> &raquo; <em>Rotate</em>,
         <strong>S/MID BTN</strong> &raquo; <em>Zoom</em>,
-        <strong>D/RGT BTN</strong> &raquo; <em>Pan</em>
+        <!-- <strong>D/RGT BTN</strong> &raquo; <em>Pan</em> -->
       </div>
       <div class="credits">
         Credits: Mashup by <a href="https://github.com/malclocke/eqnz3d/">Malcolm Locke</a>, Quake Data <a href="http://geonet.org.nz/">GeoNet</a>, Map <a href="http://openstreetmap.org/">&copy; OpenStreetMap contributers</a> <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, 3D library <a href="https://github.com/mrdoob/three.js">three.js</a>
@@ -81,9 +87,11 @@
     </div>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.6.1/jquery.min.js"></script>
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.8.13/jquery-ui.min.js"></script>
-		<script type="text/javascript" src="js/Three.js"></script>
-		<script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
-		<script type="text/javascript" src="js/Stats.js"></script>
+    <script type="text/javascript" src="js/jQRangeSlider.js"></script>
+    <script type="text/javascript" src="js/jQDateRangeSlider.js"></script>
+    <script type="text/javascript" src="js/Three.js"></script>
+    <script type="text/javascript" src="js/RequestAnimationFrame.js"></script>
+    <script type="text/javascript" src="js/Stats.js"></script>
     <script type="text/javascript" src="earthquakes.js"></script>
     <script type="text/javascript" src="eqnz3d.js"></script>
     <script type="text/javascript">
