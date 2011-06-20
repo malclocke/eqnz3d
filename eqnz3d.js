@@ -10,11 +10,33 @@ var map_material = new THREE.MeshBasicMaterial({
 // Center position of map, and center of rotation (Cathedral Sq)
 var center_lat = 43.53098;
 var center_lon = 172.63674;
-
 // Approx measure of 1 degree of latitude at map centre
 var lat_to_km = 111;
 // Approx measure of 1 degree of longitude at map centre
 var lon_to_km = 81;
+
+
+/**
+ * Returns the number of KM's from the center of the map for
+ * the given latitude or longitude.
+ */
+function kmFromLat(lat) {
+  var lat_diff_from_center = center_lat - lat;
+  return lat_to_km * lat_diff_from_center;
+}
+function kmFromLon(lon) {
+  var lon_diff_from_center = center_lon - lon;
+  return (lon_to_km * lon_diff_from_center) * -1;
+}
+
+var map_coords = {
+  top: 42.968,
+  right: 173.415,
+  bottom: 44.089,
+  left: 171.858
+};
+var map_width = kmFromLon(map_coords.right) - kmFromLon(map_coords.left);
+var map_height = kmFromLat(map_coords.top) - kmFromLat(map_coords.bottom);
 
 var min_date = new Date(2011,1,21);
 var max_date = new Date(Date.now());
@@ -76,9 +98,9 @@ function init() {
   group = new THREE.Object3D();
   scene.addObject( group );
 
-  // TODO calculate the real width / height of the map
-  var plane = new THREE.PlaneGeometry(50, 50, 20, 20);
+  var plane = new THREE.PlaneGeometry(map_width, map_height, 20, 20);
   var mapmesh = new THREE.Mesh(plane, map_material);
+  mapmesh.doubleSided = true;
   group.addChild(mapmesh);
 
   for (var i = 0; i < earthquakes.length; i++) {
@@ -129,19 +151,6 @@ function render() {
 
   renderer.render( scene, camera );
 
-}
-
-/**
- * Returns the number of KM's from the center of the map for
- * the given latitude or longitude.
- */
-function kmFromLat(lat) {
-  var lat_diff_from_center = center_lat - lat;
-  return lat_to_km * lat_diff_from_center;
-}
-function kmFromLon(lon) {
-  var lon_diff_from_center = center_lon - lon;
-  return (lon_to_km * lon_diff_from_center) * -1;
 }
 
 function colorForMag(magnitude) {
